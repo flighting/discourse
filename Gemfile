@@ -152,6 +152,8 @@ group :development do
   gem 'binding_of_caller'
   gem 'annotate'
   gem 'foreman', require: false
+  gem 'mina', '1.0.6'
+  gem 'mina-whenever'
 end
 
 # this is an optional gem, it provides a high performance replacement
