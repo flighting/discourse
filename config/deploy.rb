@@ -2,6 +2,7 @@ require 'mina/rails'
 require 'mina/git'
 # require 'mina/rbenv'  # for rbenv support. (https://rbenv.org)
 require 'mina/rvm'    # for rvm support. (https://rvm.io)
+require 'mina/puma'
 
 # Basic settings:
 #   domain       - The hostname to SSH to.
@@ -103,23 +104,24 @@ end
 #
 #  - https://github.com/mina-deploy/mina/tree/master/docs
 
-namespace :puma do
-  desc "Start the application"
-  task :start do
-    command 'echo "-----> Start Puma"'
-    command "cd #{app_path} && RAILS_ENV=#{stage} && bin/puma.sh start", :pty => false
-  end
+# namespace :puma do
+#   desc "Start the application"
+#   task :start do
+#     command 'echo "-----> Start Puma"'
+#     command "echo '#{fetch :current_path} && RAILS_ENV=#{fetch :rails_env} && bin/puma start'" 
+#     command "cd #{fetch :current_path} && RAILS_ENV=#{fetch :rails_env} && bin/puma start" 
+#   end
 
-  desc "Stop the application"
-  task :stop do
-    command 'echo "-----> Stop Puma"'
-    command "cd #{app_path} && RAILS_ENV=#{stage} && bin/puma.sh stop"
-  end
+#   desc "Stop the application"
+#   task :stop do
+#     command 'echo "-----> Stop Puma"'
+#     command "cd #{fetch :current_path} && RAILS_ENV=#{fetch :rails_env} && bin/puma stop"
+#   end
 
-  desc "Restart the application"
-  task :restart do
-    command 'echo "-----> Restart Puma"'
-    command "cd #{app_path} && RAILS_ENV=#{stage} && bin/puma.sh restart"
-  end
-end
+#   desc "Restart the application"
+#   task :restart do
+#     command 'echo "-----> Restart Puma"'
+#     command "cd #{fetch :current_path} && RAILS_ENV=#{stage} && bin/puma restart"
+#   end
+# end
 

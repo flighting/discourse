@@ -154,6 +154,7 @@ group :development do
   gem 'foreman', require: false
   gem 'mina', '1.0.6'
   gem 'mina-whenever'
+  gem 'mina-puma', :require => false
 end
 
 # this is an optional gem, it provides a high performance replacement
