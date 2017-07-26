@@ -76,11 +76,12 @@ task :deploy do
     invoke :'deploy:cleanup'
 
     on :launch do
-      in_path(fetch(:current_path)) do
-        command %{mkdir -p tmp/}
-        command %{touch tmp/restart.txt}
-      end
-      # invoke :'puma:restart'
+      # in_path(fetch(:current_path)) do
+      #   command %{mkdir -p tmp/}
+      #   command %{touch tmp/restart.txt}
+      # end
+      invoke :'puma:restart'
+
       # invoke :'sidekiq:restart'
     end
   end
@@ -101,4 +102,23 @@ end
 #
 #  - https://github.com/mina-deploy/mina/tree/master/docs
 
+namespace :puma do
+  desc "Start the application"
+  task :start do
+    queue 'echo "-----> Start Puma"'
+    queue "cd #{app_path} && RAILS_ENV=#{stage} && bin/puma.sh start", :pty => false
+  end
+
+  desc "Stop the application"
+  task :stop do
+    queue 'echo "-----> Stop Puma"'
+    queue "cd #{app_path} && RAILS_ENV=#{stage} && bin/puma.sh stop"
+  end
+
+  desc "Restart the application"
+  task :restart do
+    queue 'echo "-----> Restart Puma"'
+    queue "cd #{app_path} && RAILS_ENV=#{stage} && bin/puma.sh restart"
+  end
+end
 
