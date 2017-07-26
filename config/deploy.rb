@@ -71,7 +71,7 @@ task :deploy do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
-    # invoke :'rails:db_migrate'
+    invoke :'rails:db_migrate'
     invoke :'rails:assets_precompile'
     invoke :'deploy:cleanup'
 
@@ -80,8 +80,8 @@ task :deploy do
         command %{mkdir -p tmp/}
         command %{touch tmp/restart.txt}
       end
-      # invoke :'puma:restart'
-      # invoke :'sidekiq:restart'
+      invoke :'puma:restart'
+      invoke :'sidekiq:restart'
     end
   end
 
@@ -100,3 +100,118 @@ end
 # For help in making your deploy script, see the Mina documentation:
 #
 #  - https://github.com/mina-deploy/mina/tree/master/docs
+namespace :puma do
+  set :puma_cmd, -> { "#{fetch :bundle_more_prefix} puma -e #{fetch :rails_env}" }
+  set :pumactl_cmd, -> { "#{fetch :bundle_more_prefix} pumactl" }
+  set :puma_socket, -> { "#{fetch :current_path}/tmp/pids/puma.pid" }
+
+  desc 'Start puma'
+  task start: :environment do
+    in_path fetch(:current_path) do
+      command "#{fetch :puma_cmd}"
+    end
+  end
+
+  desc 'Stop puma'
+  task stop: :environment do
+    pumactl_command 'stop'
+  end
+
+  desc 'Restart puma'
+  task restart: :environment do
+    pumactl_command 'restart'
+  end
+
+  desc 'Restart puma (phased restart)'
+  task phased_restart: :environment do
+    pumactl_command 'phased-restart'
+  end
+
+  def pumactl_command(name)
+    in_path fetch(:current_path) do
+      command %{
+        if [ -e #{fetch :puma_socket} ]
+        then
+          #{fetch :pumactl_cmd} #{name}
+        else
+          echo 'Puma is not running!';
+        fi
+      }
+    end
+  end
+end
+
+
+set :sidekiq, -> { "#{fetch :bundle_prefix} sidekiq -d" }
+set :sidekiqctl, -> { "#{fetch :bundle_prefix} sidekiqctl" }
+set :sidekiq_config, -> { "#{fetch :current_path}/config/sidekiq.yml" }
+set :sidekiq_pid, -> { "#{fetch :current_path}/tmp/pids/sidekiq.pid" }
+set :sidekiq_processes, 2
+set :sidekiq_timeout, 10
+
+namespace :sidekiq do
+
+  def for_each_process(&block)
+    fetch(:sidekiq_processes).times do |idx|
+      if idx == 0
+        pid_file = fetch :sidekiq_pid
+      else
+        pid_file = "#{fetch :sidekiq_pid}-#{idx}"
+      end
+
+      yield(pid_file, idx)
+    end
+  end
+
+  desc 'Quiet sidekiq (stop accepting new work)'
+  task quiet: :environment do
+    comment 'Quiet sidekiq (stop accepting new work)'
+    for_each_process do |pid_file, idx|
+      command %{
+        if [ -f #{pid_file} ] && kill -0 `cat #{pid_file}`> /dev/null 2>&1; then
+          cd "#{deploy_to}/#{current_path}"
+          #{echo_cmd %{#{sidekiqctl} quiet #{pid_file}} }
+        else
+          echo 'Skip quiet command (no pid file found)'
+        fi
+      }
+    end
+  end
+
+  desc 'Stop sidekiq'
+  task stop: :environment do
+    comment 'Stop sidekiq'
+
+    for_each_process do |pid_file, _|
+      in_path fetch(:current_path) do
+        command %{ #{fetch :sidekiqctl} stop #{pid_file} #{fetch :sidekiq_timeout}}
+      end
+    end
+  end
+
+  desc 'Start sidekiq'
+  task start: :environment do
+    comment 'Start sidekiq'
+
+    for_each_process do |pid_file, idx|
+      in_path fetch(:current_path) do
+        command %{ #{fetch :sidekiq} -d -i #{idx} -P #{pid_file} }
+      end
+    end
+  end
+
+  desc 'run sidekiq ui'
+  task :ui do
+    in_path "#{fetch(:current_path)}/sidekiq" do
+      command %{ #{thinctl} start -d -R sidekiq.ru -p 9292 }
+    end
+  end
+
+  desc 'Restart sidekiq'
+  task :restart do
+    invoke :'sidekiq:stop'
+    invoke :'sidekiq:start'
+  end
+
+end
+

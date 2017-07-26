@@ -345,16 +345,16 @@ users:
     default: "admin|moderator|administrator|mod|sys|system|community|info|you|name|username|user|nickname|discourse|discourseorg|discourseforum|support|account-created"
   min_password_length:
     client: true
-    default: 10
-    min: 8
+    default: 6
+    min: 6
     max: 500
   min_admin_password_length:
     client: true
-    default: 15
-    min: 8
+    default: 6
+    min: 6
     max: 500
   password_unique_characters:
-    default: 6
+    default: 4
     min: 1
     max: 10
   block_common_passwords: true
