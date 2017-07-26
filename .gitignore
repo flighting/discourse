@@ -30,6 +30,7 @@ public/tombstone/*
 
 config/discourse.pill
 config/discourse.conf
+config/database.yml
 
 # Ignore the default SQLite database and db dumps
 *.sql
