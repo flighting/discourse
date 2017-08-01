@@ -64,7 +64,7 @@ task :setup do
 end
 
 desc "Deploys the current version to the server."
-task :deploy do
+task deploy: :environment do
   # uncomment this line to make sure you pushed your local branch to the remote origin
   # invoke :'git:ensure_pushed'
   deploy do
@@ -78,18 +78,18 @@ task :deploy do
     invoke :'deploy:cleanup'
 
     on :launch do
-      # in_path(fetch(:current_path)) do
-      #   command %{mkdir -p tmp/}
-      #   command %{touch tmp/restart.txt}
-      # end
-      invoke :'puma:restart'
+      in_path(fetch(:current_path)) do
+        command %{mkdir -p tmp/}
+        command %{touch tmp/restart.txt}
+      end
+      # invoke :'puma:restart'
 
       # invoke :'sidekiq:restart'
     end
   end
 
   # you can use `run :local` to run tasks on local machine before of after the deploy scripts
-  # run(:local){ say 'done' }
+  run(:local){ say 'done' }
 end
 
 
@@ -104,24 +104,5 @@ end
 #
 #  - https://github.com/mina-deploy/mina/tree/master/docs
 
-# namespace :puma do
-#   desc "Start the application"
-#   task :start do
-#     command 'echo "-----> Start Puma"'
-#     command "echo '#{fetch :current_path} && RAILS_ENV=#{fetch :rails_env} && bin/puma start'" 
-#     command "cd #{fetch :current_path} && RAILS_ENV=#{fetch :rails_env} && bin/puma start" 
-#   end
-
-#   desc "Stop the application"
-#   task :stop do
-#     command 'echo "-----> Stop Puma"'
-#     command "cd #{fetch :current_path} && RAILS_ENV=#{fetch :rails_env} && bin/puma stop"
-#   end
-
-#   desc "Restart the application"
-#   task :restart do
-#     command 'echo "-----> Restart Puma"'
-#     command "cd #{fetch :current_path} && RAILS_ENV=#{stage} && bin/puma restart"
-#   end
-# end
-
+task :console => :environment do
+end
